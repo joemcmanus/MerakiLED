@@ -35,17 +35,18 @@ Modify the configuration file
     [mqtt]
     server=localhost 
 
-#Install on ESP32
+# Install on ESP32
 
 To use the Sparkfun ESP32 Qwiic you will need to load new ESP libraries and set your board to Adafruit Feather, also you'll need the correct usb driver for the ESP32. 
 
 Also you'll need to assign new i2C addresses to the 2nd and 3rd Qwiic LED sticks. You can follow this exampl sketch. 
 
-#Run
+# Run
+
 Simple as ./netperf.py 
 
 
-#Parts
+# Parts
 
  - Sparkfun ESP32 Wroom Thing Plus https://www.sparkfun.com/products/15663
  - Sparkfun SparkX LED Stick https://www.sparkfun.com/products/14783
