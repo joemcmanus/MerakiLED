@@ -1,3 +1,7 @@
+
+
+![alt_tag](https://github.com/joemcmanus/MerakiLED/blob/master/images/P8240361.jpg)
+
 # MerakiLED
 Visualizing Cisco Meraki Data via Sparkfun Qwiic Devices 
 
