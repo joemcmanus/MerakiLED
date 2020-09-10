@@ -39,11 +39,15 @@ Modify the configuration file
     [mqtt]
     server=localhost 
 
+    [local]
+    bandwidth=123
+
 # Install on ESP32
 
 To use the Sparkfun ESP32 Qwiic you will need to load new ESP libraries and set your board to Adafruit Feather, also you'll need the correct usb driver for the ESP32. 
 
-Also you'll need to assign new i2C addresses to the 2nd and 3rd Qwiic LED sticks. You can follow this exampl sketch. 
+Also you'll need to assign new i2C addresses to the 2nd and 3rd Qwiic LED sticks. You can follow this example sketch: https://github.com/sparkfun/SparkFun_Qwiic_LED_Stick_Arduino_Library/blob/master/examples/Example10_ChangeAddress/Example10_ChangeAddress.ino
+
 
 # Run
 
