@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # File    : netperf.py - monitor meraki gear and update ESP32 via MQTT
 # Author  : Joe McManus josephmc@alumni.cmu.edu
-# Version : 0.1 08/23/2020
+# Version : 0.2 09/10/2020
 # Copyright (C) 2020 Joe McManus
 
 # This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ import configparser
 import paho.mqtt.publish as pub
 import pprint
 import sys
-
+from prettytable import PrettyTable
 
 
 config=configparser.ConfigParser()
@@ -34,6 +34,7 @@ mxSerial=config['mx']['serial']
 msSerial=config['ms']['serial']
 orgId=config['org']['orgId']
 mqttServer=config['mqtt']['server']
+bandwidthMax=int(config['local']['bandwidth'])
 
 def updateLED(server, topic, message):
 	pub.single(topic, message, hostname=server)
@@ -52,14 +53,20 @@ if len(sys.argv) == 2:
 dashboard = meraki.DashboardAPI(apiKey)
 
 while True: 
+	table=PrettyTable(["check", "value"])
 	#Get the "performance" of the Meraki firewall and send it to the led
 	response = dashboard.appliance.getDeviceAppliancePerformance(mxSerial)
 	mxPerf=round(response['perfScore']/10)
+	if mxPerf == 0 :
+		mxPerf =1 
+
 	updateLED(mqttServer, 'ledOne', mxPerf)
+	table.add_row(["Perf", mxPerf]) 
 
 	#Org client security events
 	response = dashboard.appliance.getOrganizationApplianceSecurityEvents( orgId, total_pages='all')
 	updateLED(mqttServer, 'ledTwo', len(response))
+	table.add_row(["Sec Evt", len(response)]) 
 
 	#Port usage
 	response = dashboard.switch.getDeviceSwitchPortsStatuses(msSerial,timespan=300)
@@ -67,7 +74,12 @@ while True:
 	#pp.pprint(response[0])
 	bandwidth=(response[0]['trafficInKbps']['total'])
 	bandwidthMb=round(bandwidth / 1024)
-	updateLED(mqttServer, 'ledThree', bandwidthMb)
+	bandwidthPerc=round(bandwidthMb/bandwidthMax*10)
+	updateLED(mqttServer, 'ledThree', bandwidthPerc)
+	table.add_row(["Bandwidth", bandwidthMb]) 
+
+	#show table of results
+	print(table)
 
 	time.sleep(30)
 
