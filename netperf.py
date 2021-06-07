@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # File    : netperf.py - monitor meraki gear and update ESP32 via MQTT
 # Author  : Joe McManus josephmc@alumni.cmu.edu
-# Version : 0.3 11/29/2020
-# Copyright (C) 2020 Joe McManus
+# Version : 0.4 06/01/2021
+# Copyright (C) 2021 Joe McManus
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import sys
 from prettytable import PrettyTable
 import sqlite3
 from os import path
+import datetime
 
 config=configparser.ConfigParser()
 config.read('netperf.conf')
@@ -40,17 +41,28 @@ dbStatus=config['db']['status']
 dbFile=config['db']['file']
 
 def updateLED(server, topic, message):
-    try:
-        pub.single(topic, message, hostname=server)
-    except:
-        pass
+	now = datetime.datetime.now()
+	after6PM=now.replace(hour=20, minute=0, second=0, microsecond=0)
+	before6AM=now.replace(hour=6, minute=0, second=0, microsecond=0)
+
+	if now < before6AM or now > after6PM:
+		pub.single(topic, message, hostname=server)
+		clearAll(server)
+	else:
+		try:
+			pub.single(topic, message, hostname=server)
+		except:
+			pass
 
 def clearAll(mqttserver):
-    updateLED(mqttServer, 'ledOne', 0)
-    time.sleep(0.5)
-    updateLED(mqttServer, 'ledTwo', 0)
-    time.sleep(0.5)
-    updateLED(mqttServer, 'ledThree', 0)
+	try:
+		updateLED(mqttServer, 'ledOne', 0)
+		time.sleep(0.5)
+		updateLED(mqttServer, 'ledTwo', 0)
+		time.sleep(0.5)
+		updateLED(mqttServer, 'ledThree', 0)
+	except:
+		pass
 
 def storeValue(val):
     t=(val,)
