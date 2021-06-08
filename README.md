@@ -19,7 +19,7 @@ Simply run ./netperf.py... Okay there are a few more steps to get that to work.
 Install the prerequisites
 
      # sudo pip3 install meraki
-     # apt install mosquitto-clients mosquito  
+     # apt install mosquitto-clients mosquitto  
 
 Modify the configuration file
 
@@ -41,6 +41,10 @@ Modify the configuration file
 
     [local]
     bandwidth=123
+
+    [opHours]
+    startTime=6
+    endTime=18
 
 # Install on ESP32
 

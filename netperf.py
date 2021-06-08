@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # File    : netperf.py - monitor meraki gear and update ESP32 via MQTT
 # Author  : Joe McManus josephmc@alumni.cmu.edu
-# Version : 0.4 06/01/2021
+# Version : 0.5 06/08/2021
 # Copyright (C) 2021 Joe McManus
 
 # This program is free software: you can redistribute it and/or modify
@@ -39,15 +39,24 @@ mqttServer=config['mqtt']['server']
 bandwidthMax=int(config['local']['bandwidth'])
 dbStatus=config['db']['status']
 dbFile=config['db']['file']
+startTime=int(config['opHours']['startTime'])
+endTime=int(config['opHours']['endTime'])
 
 def updateLED(server, topic, message):
 	now = datetime.datetime.now()
-	after6PM=now.replace(hour=20, minute=0, second=0, microsecond=0)
-	before6AM=now.replace(hour=6, minute=0, second=0, microsecond=0)
+	afterEnd=now.replace(hour=endTime, minute=0, second=0, microsecond=0)
+	beforeStart=now.replace(hour=startTime, minute=0, second=0, microsecond=0)
 
-	if now < before6AM or now > after6PM:
-		pub.single(topic, message, hostname=server)
-		clearAll(server)
+	if now < beforeStart or now > afterEnd:
+		try:
+			pub.single('ledOne', 0, hostname=server)
+			time.sleep(1)
+			pub.single('ledTwo', 0, hostname=server)
+			time.sleep(1)
+			pub.single('ledThree', 0, hostname=server)
+			time.sleep(1)
+		except:
+			pass
 	else:
 		try:
 			pub.single(topic, message, hostname=server)
@@ -57,9 +66,9 @@ def updateLED(server, topic, message):
 def clearAll(mqttserver):
 	try:
 		updateLED(mqttServer, 'ledOne', 0)
-		time.sleep(0.5)
+		time.sleep(1)
 		updateLED(mqttServer, 'ledTwo', 0)
-		time.sleep(0.5)
+		time.sleep(1)
 		updateLED(mqttServer, 'ledThree', 0)
 	except:
 		pass
