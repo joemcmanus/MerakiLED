@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # File    : netperf.py - monitor meraki gear and update ESP32 via MQTT
 # Author  : Joe McManus josephmc@alumni.cmu.edu
-# Version : 0.5 06/08/2021
+# Version : 0.4 06/01/2021
 # Copyright (C) 2021 Joe McManus
 
 # This program is free software: you can redistribute it and/or modify
@@ -104,35 +104,38 @@ if dbStatus:
 dashboard = meraki.DashboardAPI(apiKey)
 
 while True: 
-    table=PrettyTable(["check", "value"])
-    #Get the "performance" of the Meraki firewall and send it to the led
-    response = dashboard.appliance.getDeviceAppliancePerformance(mxSerial)
-    mxPerf=round(response['perfScore']/10)
-    if mxPerf == 0 :
-        mxPerf =1 
+	try: 
+		table=PrettyTable(["check", "value"])
+		#Get the "performance" of the Meraki firewall and send it to the led
+		response = dashboard.appliance.getDeviceAppliancePerformance(mxSerial)
+		mxPerf=round(response['perfScore']/10)
+		if mxPerf == 0 :
+			mxPerf =1 
+		#Org client security events
+		response = dashboard.appliance.getOrganizationApplianceSecurityEvents( orgId, total_pages='all')
+		secAlerts=len(response)
+		
+		#Port usage
 
-    updateLED(mqttServer, 'ledOne', mxPerf)
-    table.add_row(["Perf", mxPerf]) 
+		response = dashboard.switch.getDeviceSwitchPortsStatuses(msSerial,timespan=300)
+		bandwidth=(response[0]['trafficInKbps']['total'])
+		bandwidthMb=round(bandwidth / 1024)
+		bandwidthPerc=round(bandwidthMb/bandwidthMax*10)
 
-    #Org client security events
-    response = dashboard.appliance.getOrganizationApplianceSecurityEvents( orgId, total_pages='all')
-    updateLED(mqttServer, 'ledTwo', len(response))
-    table.add_row(["Sec Evt", len(response)]) 
+		updateLED(mqttServer, 'ledOne', mxPerf)
+		table.add_row(["Perf", mxPerf]) 
+		updateLED(mqttServer, 'ledTwo', secAlerts)
+		table.add_row(["Sec Evt", secAlerts]) 
 
-    #Port usage
-    response = dashboard.switch.getDeviceSwitchPortsStatuses(msSerial,timespan=300)
-    #pp = pprint.PrettyPrinter(indent=4)
-    #pp.pprint(response[0])
-    bandwidth=(response[0]['trafficInKbps']['total'])
-    bandwidthMb=round(bandwidth / 1024)
-    bandwidthPerc=round(bandwidthMb/bandwidthMax*10)
-    updateLED(mqttServer, 'ledThree', bandwidthPerc)
-    table.add_row(["Bandwidth", bandwidthMb]) 
+		updateLED(mqttServer, 'ledThree', bandwidthPerc)
+		table.add_row(["Bandwidth", bandwidthMb]) 
 
-    #show table of results
-    print(table)
-    if dbStatus:
-        storeValue(bandwidthMb)
+		#show table of results
+		print(table)
+		if dbStatus:
+			storeValue(bandwidthMb)
+	except:
+		print("ERROR: Unable to connect to Meraki Dashboard")
 
-    time.sleep(30)
+	time.sleep(30)
 
